@@ -1,0 +1,21 @@
+{
+  "owner": "weizhigao21",
+  "repo": "ImageBox",
+  "exe_name": "ImageBox.exe",
+  "app_name": "像匣",
+  "asset_prefix": "ImageBox",
+  "updater_name": "updater.exe",
+  "data_dirs": [
+    "config",
+    "models",
+    "output",
+    "logs",
+    "update_config.json"
+  ],
+  "proxies": [
+    null,
+    "http://127.0.0.1:7897"
+  ],
+  "health_check_seconds": 6,
+  "exit_wait_seconds": 120
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <title>图片工具箱</title>
+  <desc>深色圆角底板，白色图片框与山形，橙色太阳和裁切角。</desc>
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="#18181a"/>
+  <path d="M155 57H73a16 16 0 0 0-16 16v110a16 16 0 0 0 16 16h110a16 16 0 0 0 16-16v-82"
+        fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="99" cy="99" r="13" fill="#e0651c"/>
+  <path d="M77 169l39-44 23 24 24-32 23 52z" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M177 47h32v32" fill="none" stroke="#e0651c" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

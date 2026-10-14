@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+build/
+dist/
+*.spec
+!imagebox.spec
+!updater.spec
+
+# 模型权重通常很大，不入库
+models/*
+!models/.gitkeep
+!models/README.md
+
+# 输出结果
+output/*
+!output/.gitkeep
+
+config/presets/*.json
+!config/presets/.gitkeep
+config/settings.json
+
+*.log
+.pytest_cache/
+tests/_tmp/
