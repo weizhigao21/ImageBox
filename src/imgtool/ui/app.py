@@ -34,6 +34,7 @@ from .dnd import FileDropRelay, event_paths
 from .pages.matting_page import MattingPage
 from .pages.module_page import ModulePage
 from .pages.placeholder_page import PlaceholderPage
+from .pages.superres_page import SuperresPage
 
 log = get_logger("app")
 
@@ -145,6 +146,8 @@ class MainWindow(QMainWindow):
             return PlaceholderPage(module, self.config)
         if module.name == "matting":
             page: QWidget = MattingPage(module, self.config)
+        elif module.name == "superres":
+            page = SuperresPage(module, self.config)
         else:
             page = ModulePage(module, self.config)
         drag_active = getattr(page, "dragActive", None)

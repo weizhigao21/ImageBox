@@ -43,7 +43,7 @@
 | 模块 | 状态 | 说明 |
 |---|---|---|
 | ✂ 抠图 matting | ✅ 可用 | 简易 GrabCut（无需权重）/ ONNX 模型（u2net、ISNet、RMBG-1.4）/ BiRefNet（实验） |
-| ⤢ 超分 superres | ⏳ 占位 | 已接入框架，等待实现 |
+| ⤢ 超分 superres | ✅ 可用 | Real-ESRGAN x4（ONNX / Torch 双后端），分块推理防显存溢出 |
 | ⬚ 裁剪 crop | ⏳ 占位 | 已接入框架，等待实现 |
 
 ## 文档
@@ -185,7 +185,38 @@ python src\imgtool\cli.py run matting -i .\photos -o out `
 
 参数可以存成预设（`config\presets\matting_*.json`）。
 
-## 5. 目录结构
+## 5. 超分模块
+
+用 Real-ESRGAN 把图片放大 4 倍并补充细节（v0.4 新增）。
+
+### 后端
+
+| 后端 | 依赖 | 说明 |
+|---|---|---|
+| `onnx` | onnxruntime + `realesrgan-x4plus.onnx` | 推荐。界面点「下载」（约 64MB，动态分辨率），或手动放进 `models\` |
+| `torch` | torch + 官方 `.pth` | 加载 GitHub Release 的 RealESRGAN_x4plus(.pth / anime_6B.pth)；GPU 上默认 fp16 |
+
+权重目录：`models\`。本地的其他 `.onnx` / `.pth` 权重放进目录后会自动出现在「模型权重」下拉框
+（Torch 后端按 state dict 自动推断网络结构，兼容任意 RRDB x4 权重）。
+
+### 主要参数
+
+| 参数 | 默认 | 作用 |
+|---|---|---|
+| 分块尺寸 | 256 px | 大图分块推理防显存溢出；0 = 整图一次推理（更快但可能爆显存） |
+| 分块重叠 | 10 px | 每块向四周多算这么多像素再拼中心区域，消除接缝 |
+| GPU 半精度 | 开 | Torch 后端在 CUDA 上用 fp16，省显存更快 |
+| 输出格式 | PNG 无损 | PNG / JPG（JPG 可调质量） |
+
+文件名模板默认 `{stem}_x4`，输出默认写到 `output\superres\<时间戳>\`。
+
+```powershell
+python src\imgtool\cli.py run superres -i 图片.png -o out --set tile=128 --set tile_pad=8
+```
+
+> 显存参考：RTX 2080 Ti 11GB 下 tile=256 可稳定处理任意尺寸；整图推理建议长边 ≤1500px。
+
+## 6. 目录结构
 
 ```
 图片处理/
@@ -206,7 +237,7 @@ python src\imgtool\cli.py run matting -i .\photos -o out `
 └─ tests/                      # 冒烟测试与调试脚本
 ```
 
-## 6. 新增一个模块
+## 7. 新增一个模块
 
 只要新建 `src/imgtool/modules/<名字>/__init__.py`：
 
@@ -233,10 +264,11 @@ MODULE = MyModule()
 重启程序即可：左侧列表自动出现该模块，参数面板、预览、批量、进度、取消、输出目录、
 参数预设全部自动具备，**不需要改任何 UI 代码**。
 
-## 7. 自检
+## 8. 自检
 
 ```powershell
 python tests\smoke_test.py       # 核心链路：注册表 → 抠图 → 输出（含精度与兜底路径校验）
+python tests\superres_test.py    # 超分：分块拼装精确性（5 组参数）、取消、中文路径整链路、参数校验
 python tests\ui_smoke.py         # 离屏渲染主窗口并跑一次抠图，输出截图到 tests\_tmp\
 python tests\dnd_test.py         # 拖放导入：各落点、文件夹、去重、非图片、占位页自动切换
 python tests\brush_test.py       # 结果页精修画笔：擦除/保留/撤销 + 保存修改落盘校验
@@ -250,7 +282,7 @@ python tests\debug_busy.py       # 对比几种 GrabCut 初始化策略（杂乱
 
 `smoke_test.py` 的实测结果：光滑渐变背景 IoU 1.000，杂乱背景 IoU 0.914。
 
-## 8. 常见问题
+## 9. 常见问题
 
 | 问题 | 处理 |
 |---|---|
@@ -261,12 +293,14 @@ python tests\debug_busy.py       # 对比几种 GrabCut 初始化策略（杂乱
 | 处理很慢 | 简易后端可调小「处理长边」（GrabCut 封顶 1200px）；ONNX 检查实际设备，边缘调参复用最近一张推理 |
 | 拖进来的文件没反应 | 只支持图片（png/jpg/jpeg/bmp/webp/tif/gif）与文件夹；其他文件会被忽略 |
 
-## 9. 路线图
+## 10. 路线图
+
+详细规划见 [docs/规划.md](docs/规划.md)。
 
 - [x] M0 工程骨架（配置 / 日志 / 类型 / 注册表 / 执行引擎 / 图像 IO）
 - [x] M1 PySide6 基础 UI（模块列表、三视图预览、自动参数面板、后台线程、预设）
 - [x] M2 抠图后端（simple + ONNX + BiRefNet）+ 后处理（羽化 / 去色边 / 描边）
 - [x] M3 CLI 批处理 + 冒烟测试 + 文档 + 原图主体标记 + 结果页精修画笔
-- [ ] M4 超分模块（Real-ESRGAN 等）
+- [x] M4 超分模块（Real-ESRGAN，ONNX / Torch 双后端）
 - [ ] M5 裁剪模块（批量裁剪 / 智能主体裁剪 / 去白边）
 - [ ] M6 打包成 exe（PyInstaller）与拖拽导入、批处理队列优化

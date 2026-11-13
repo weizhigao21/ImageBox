@@ -1,13 +1,5 @@
-"""超分模块（规划中，占位）。"""
+"""超分模块（Real-ESRGAN，ONNX / Torch 双后端）。"""
 
-from ...core.base import PlaceholderModule
-
-MODULE = PlaceholderModule(
-    name="superres",
-    title="超分",
-    icon="⤢",
-    description="把低分辨率图片放大并补充细节（Real-ESRGAN / SwinIR 等）。",
-)
-MODULE.order = 20
+from .module import MODULE
 
 __all__ = ["MODULE"]

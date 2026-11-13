@@ -94,6 +94,21 @@ def write_image(path: str | Path, image: np.ndarray) -> Path:
     return p
 
 
+def write_jpg(path: str | Path, image: np.ndarray, quality: int = 92) -> Path:
+    """按指定质量写 JPG。image 为 RGB / RGBA（透明通道会被丢弃）。"""
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    arr = np.asarray(image)
+    if arr.ndim == 3 and arr.shape[2] == 4:
+        arr = arr[:, :, :3]
+    out = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR) if arr.ndim == 3 else arr
+    ok, buf = cv2.imencode(".jpg", out, [int(cv2.IMWRITE_JPEG_QUALITY), int(quality)])
+    if not ok:
+        raise ValueError(f"无法编码为 jpg：{p}")
+    buf.tofile(str(p))
+    return p
+
+
 # ---------------------------------------------------------------- 合成/转换
 def parse_color(value: str | Sequence[int], default: tuple[int, int, int] = (255, 255, 255)) -> tuple[int, int, int]:
     """'#ffffff' / '255,255,255' -> (r, g, b)。"""
