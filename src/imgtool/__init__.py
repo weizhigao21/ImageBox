@@ -4,7 +4,7 @@
 通过 core.registry 自动发现，共用同一套处理管线（core.pipeline）与 UI 外壳（ui.app）。
 """
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 APP_NAME = "像匣"
 APP_ID = "ImageBox"
 EXE_NAME = "ImageBox.exe"

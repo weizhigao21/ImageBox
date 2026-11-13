@@ -5,6 +5,15 @@
 
 项目仓库：[weizhigao21/ImageBox](https://github.com/weizhigao21/ImageBox) · [发行版页面](https://github.com/weizhigao21/ImageBox/releases)
 
+## v0.4.0 超分模块（2026-11-13）
+
+新增「⤢ 超分」模块：Real-ESRGAN 把图片放大 4 倍并补充细节。
+
+- 双后端：ONNX（推荐，点「下载」获取约 64MB 权重）/ Torch（官方 `.pth`，GPU 默认 fp16）
+- 大图分块推理（分块尺寸 + 重叠），防显存溢出；Torch 后端自动识别本地任意 RRDB x4 权重
+- 输出 PNG 无损 / JPG 可调质量，文件名模板默认 `{stem}_x4`
+- 规划文档 [docs/规划.md](docs/规划.md)：后续按 P2 格式转换与编辑 → P3 识别 → P4 模块串联推进
+
 ## v0.3.1 输出目录记忆（2026-10-16）
 
 在「参数 → 输出」选择或输入输出目录后，自动写入 `config/settings.json`，下次启动恢复。清空后恢复按时间戳自动创建输出目录；载入预设和重置参数也会更新已保存目录。
