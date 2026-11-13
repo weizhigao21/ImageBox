@@ -146,7 +146,7 @@ class MattingModule(BaseModule):
             ),
             ParamSpec(
                 "out_dir", "输出目录", "path", "", group="输出",
-                tooltip="留空则自动写入 output/matting/<时间戳>/",
+                tooltip="自动保存到配置文件，重启后恢复；留空则使用配置的 output_dir/matting/<时间戳>/",
             ),
             ParamSpec(
                 "name_template", "文件名模板", "str", "{stem}_cutout", group="输出",

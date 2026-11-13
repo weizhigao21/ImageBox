@@ -1,0 +1,11 @@
+{
+  "device": "auto",
+  "models_dir": "models",
+  "output_dir": "output",
+  "presets_dir": "config/presets",
+  "log_level": "INFO",
+  "check_updates_on_startup": true,
+  "matting": {
+    "out_dir": ""
+  }
+}

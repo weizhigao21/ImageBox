@@ -126,6 +126,10 @@ class ModulePage(QWidget):
         self._busy = False
 
         self._build()
+        if self.config is not None and "out_dir" in self.panel.values():
+            saved = self.config.sub(self.module.name).get("out_dir", "")
+            self.panel.set_values({"out_dir": saved if isinstance(saved, str) else ""})
+            self.panel.valueChanged.connect(self._save_output_directory)
         self._setup_drop_targets()
         self._load_preset_list()
 
@@ -1271,6 +1275,20 @@ class ModulePage(QWidget):
             QMessageBox.critical(self, "任务出错", message)
 
     # ================================================================ 输出
+    def _save_output_directory(self) -> None:
+        raw = str(self.panel.values().get("out_dir") or "").strip()
+        settings = self.config.sub(self.module.name)
+        if settings.get("out_dir", "") == raw:
+            return
+        previous = dict(settings)
+        settings["out_dir"] = raw
+        try:
+            self.config.save()
+        except OSError as exc:
+            self.config.data[self.module.name] = previous
+            self.status.setText(f"输出目录未能保存，重启后不会恢复：{exc}")
+            log.warning("输出目录配置保存失败：%s", exc)
+
     def open_output_dir(self) -> None:
         target: Optional[Path] = self._run_dir
         if target is None:
@@ -1281,7 +1299,7 @@ class ModulePage(QWidget):
         if target is None:
             params = self.panel.values()
             raw = str(params.get("out_dir") or "").strip()
-            target = Path(raw) if raw else (
+            target = Path(raw).expanduser() if raw else (
                 Path(self.config.output_dir) / self.module.name if self.config else Path("output")
             )
         if not target.exists():

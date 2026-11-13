@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import json
 import sys
 import tempfile
 import time
@@ -50,6 +51,83 @@ class OptimizationTests(unittest.TestCase):
 
     def tearDown(self):
         self.tmp.cleanup()
+
+    def test_output_directory_picker_survives_restart_and_controls_export(self):
+        self.config.set("check_updates_on_startup", False)
+        window = MainWindow(self.config)
+        self.addCleanup(window.close)
+        page = window.stack.currentWidget()
+        directory = self.root / "图片输出 带空格"
+        with patch("imgtool.ui.widgets.param_panel.QFileDialog.getExistingDirectory", return_value=str(directory)):
+            page.panel._pick_dir("out_dir")
+        settings_path = self.root / "config" / "settings.json"
+        saved = json.loads(settings_path.read_text(encoding="utf-8"))
+        self.assertEqual(saved["matting"]["out_dir"], str(directory))
+        window.close()
+        with patch("imgtool.core.config.project_root", return_value=self.root):
+            restored = AppConfig.load()
+        reopened = MainWindow(restored)
+        self.addCleanup(reopened.close)
+        page = reopened.stack.currentWidget()
+        self.assertEqual(page.panel.values()["out_dir"], str(directory))
+        image = np.full((128, 128, 3), 245, np.uint8)
+        image[32:96, 32:96] = (30, 70, 110)
+        sample = self.root / "sample.png"
+        write_image(sample, image)
+        page.panel.set_values({"backend": "simple", "decontaminate": False})
+        result = Pipeline(page.module, page.panel.values(), restored).run([ImageItem(sample)])[0]
+        self.assertTrue(result.ok, result.message)
+        self.assertTrue(result.outputs)
+        self.assertTrue(all(Path(p).parent == directory for p in result.outputs.values()))
+        with patch("imgtool.ui.app.io_utils.open_in_explorer") as opened:
+            reopened.open_output_directory()
+        opened.assert_called_once_with(directory)
+        reopened.close()
+
+    def test_clearing_saved_output_directory_restores_automatic_output(self):
+        self.config.set("check_updates_on_startup", False)
+        self.config.sub("matting")["out_dir"] = str(self.root / "previous")
+        window = MainWindow(self.config)
+        self.addCleanup(window.close)
+        page = window.stack.currentWidget()
+        edit = page.panel._widgets["out_dir"].property("edit")
+        edit.clear()
+        with patch("imgtool.core.config.project_root", return_value=self.root):
+            restored = AppConfig.load()
+        self.assertEqual(restored.sub("matting")["out_dir"], "")
+        directory = Pipeline(page.module, page.panel.values(), restored).resolve_run_dir()
+        self.assertEqual(directory.parent, self.root / "output" / "matting")
+        window.select_module("crop")
+        with patch("imgtool.ui.app.io_utils.open_in_explorer") as opened:
+            window.open_output_directory()
+        opened.assert_called_once_with(self.config.output_dir)
+        window.close()
+
+    def test_output_directory_write_error_preserves_previous_configuration(self):
+        self.config.set("check_updates_on_startup", False)
+        self.config.sub("matting").update(out_dir="previous", backend="simple")
+        settings_path = self.config.save()
+        original = settings_path.read_bytes()
+        window = MainWindow(self.config)
+        self.addCleanup(window.close)
+        page = window.stack.currentWidget()
+        with patch("pathlib.Path.replace", side_effect=PermissionError("read only")), self.assertLogs("imgtool.page", level="WARNING"):
+            page.panel.set_values({"out_dir": "new location"})
+        self.assertEqual(settings_path.read_bytes(), original)
+        self.assertEqual(self.config.sub("matting")["out_dir"], "previous")
+        self.assertEqual(self.config.sub("matting")["backend"], "simple")
+        self.assertFalse(settings_path.with_name(settings_path.name + ".tmp").exists())
+        self.assertIn("未能保存", page.status.text())
+        window.close()
+
+    def test_unrelated_parameter_changes_do_not_write_output_configuration(self):
+        self.config.set("check_updates_on_startup", False)
+        window = MainWindow(self.config)
+        self.addCleanup(window.close)
+        with patch.object(self.config, "save") as save:
+            window.stack.currentWidget().panel.set_values({"feather": 2.5})
+        save.assert_not_called()
+        window.close()
 
     def test_worker_reports_whole_batch_and_continues_after_failure(self):
         worker = ModuleWorker(DummyModule(), [ImageItem(f"{x}.png") for x in ("a", "bad", "c")], {}, self.config)

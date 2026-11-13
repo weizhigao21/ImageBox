@@ -158,7 +158,7 @@ class MainWindow(QMainWindow):
 
         file_menu = menubar.addMenu("文件")
         act_output = QAction("打开输出目录", self)
-        act_output.triggered.connect(lambda: io_utils.open_in_explorer(self.config.output_dir))
+        act_output.triggered.connect(self.open_output_directory)
         file_menu.addAction(act_output)
         act_models = QAction("打开模型目录", self)
         act_models.triggered.connect(lambda: io_utils.open_in_explorer(self.config.models_dir))
@@ -259,6 +259,13 @@ class MainWindow(QMainWindow):
             "本地图片处理：抠图、主体标记、画笔精修与批处理。\n"
             "通过「帮助 → 检查更新」获取新版本。",
         )
+
+    def open_output_directory(self) -> None:
+        page = self.stack.currentWidget()
+        if isinstance(page, ModulePage):
+            page.open_output_dir()
+        else:
+            io_utils.open_in_explorer(self.config.output_dir)
 
     def current_module_name(self) -> Optional[str]:
         row = self.module_list.currentRow()

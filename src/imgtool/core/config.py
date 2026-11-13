@@ -60,9 +60,14 @@ class AppConfig:
     def save(self, path: str | Path | None = None) -> Path:
         target = Path(path) if path is not None else (self.path or self.root / "config" / "settings.json")
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(
-            json.dumps(self.data, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        temporary = target.with_name(target.name + ".tmp")
+        try:
+            temporary.write_text(
+                json.dumps(self.data, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            temporary.replace(target)
+        finally:
+            temporary.unlink(missing_ok=True)
         self.path = target
         return target
 

@@ -5,6 +5,12 @@
 
 项目仓库：[weizhigao21/ImageBox](https://github.com/weizhigao21/ImageBox) · [发行版页面](https://github.com/weizhigao21/ImageBox/releases)
 
+## v0.3.1 输出目录记忆（2026-10-16）
+
+在「参数 → 输出」选择或输入输出目录后，自动写入 `config/settings.json`，下次启动恢复。清空后恢复按时间戳自动创建输出目录；载入预设和重置参数也会更新已保存目录。
+源码运行的配置文件位于项目根目录下，便携版位于 `ImageBox.exe` 同目录的 `config` 文件夹。配置不存在时，首次修改输出目录会自动创建；可参考 [配置示例](config/settings.example.json)。
+`matting.out_dir` 是抠图界面保存的指定目录；顶层 `output_dir` 是留空时自动输出的根目录（默认 `output`）。更新软件时保留配置。
+
 ## v0.3 更新功能（2026-10-15）
 
 项目名为「像匣（ImageBox）」。左侧与帮助菜单提供「检查更新」，支持填写 GitHub 发布仓库、后台检查、更新说明、下载与取消。
